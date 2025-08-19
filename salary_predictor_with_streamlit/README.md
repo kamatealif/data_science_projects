@@ -22,12 +22,14 @@ Then, install all dependencies:
 
 ```powershell
 uv pip install -r pyproject.toml
+# or
+uv sync
 ```
 
 Or, to add new packages:
 
 ```powershell
-uv sync
+uv add package_name
 ```
 
 ## Running the Project
