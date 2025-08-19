@@ -5,7 +5,7 @@ from sklearn.linear_model import LinearRegression
 import streamlit as st
 
 if __name__ == "__main__":
-    df = pd.read_csv('salary_data.csv')
+    df = pd.read_csv('./salary_data.csv')
 
     # feature selection 
 
