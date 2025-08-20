@@ -1,12 +1,13 @@
 import pandas as pd
 import numpy as np
-
+import streamlit as st
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 import random
+import os
 
 
 
@@ -50,21 +51,46 @@ def generate_data():
 def main():
     print("Hello from nlp-yt-comments-dataset!")
 
+@st.cache_resource
+def load_model():
+    # create dataset if missing
+    if not os.path.exists("data.csv"):
+        generate_data()
+
+    try:
+        df = pd.read_csv("data.csv")
+    except Exception as e:
+        # fallback: regenerate and retry
+        generate_data()
+        df = pd.read_csv("data.csv")
+
+    # use a solver and larger max_iter to avoid convergence issues on small data
+    model = Pipeline([
+        ("tfid", TfidfVectorizer()),
+        ("clf", LogisticRegression(solver="liblinear", max_iter=200))
+    ])
+    model.fit(df['comment'], df['label'])
+
+    return model
 
 if __name__ == "__main__":
     main()
 
     # generate_data() #use this function to generate the data 
+    model = load_model();
+  
+    st.title("""
+    # NLP Youtube Comments classifier""")
 
-    df = pd.read_csv("data.csv")
-    X_train, X_test, y_train, y_test = train_test_split(df['comment'], df['label'], test_size=0.2, random_state= 45)
+    st.write("""Classify your comment as toxic or supportive""")
+    comment = st.text_area("Enter a Youtube Comment")
 
-    model = Pipeline(
-        [('tfid', TfidfVectorizer()),
-        ('clf', LogisticRegression())]
-    )
+    if comment:
+        prediction = model.predict([comment])[0]
+        if prediction =='toxic':
+            st.error("This comment is likely Toxic")
+        else:
+            st.success("This comment is **Supportive**")
 
-    model.fit(X_train, y_train)
 
-    acc = model.score(X_test, y_test)
-    print(f"Model Accuracy: {round(acc * 100 , 2)}%")
+    
